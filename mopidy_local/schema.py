@@ -23,7 +23,9 @@ _BROWSE_QUERIES = {
     None: """
     SELECT CASE WHEN album.uri IS NULL THEN '%s' ELSE '%s' END AS type,
            coalesce(album.uri, track.uri) AS uri,
-           coalesce(album.name, track.name) AS name
+           coalesce(album.name, track.name) AS name,
+           album.path as path,
+           track.audio_ext as audio_ext
       FROM track LEFT OUTER JOIN album ON track.album = album.uri
      WHERE %%s
      GROUP BY coalesce(album.uri, track.uri)
@@ -31,7 +33,7 @@ _BROWSE_QUERIES = {
     """
     % (Ref.TRACK, Ref.ALBUM),
     Ref.ALBUM: """
-    SELECT '%s' AS type, uri AS uri, name AS name
+    SELECT '%s' AS type, uri AS uri, name AS name, path as path
       FROM album
      WHERE %%s
      ORDER BY %%s
@@ -45,7 +47,7 @@ _BROWSE_QUERIES = {
     """
     % Ref.ARTIST,
     Ref.TRACK: """
-    SELECT '%s' AS type, uri AS uri, name AS name
+    SELECT '%s' AS type, uri AS uri, name AS name, audio_ext as audio_ext
       FROM track
      WHERE %%s
      ORDER BY %%s
@@ -165,7 +167,7 @@ _SEARCH_FIELDS = {
     "musicbrainz_artistid",
 }
 
-schema_version = 7
+schema_version = 8
 
 logger = logging.getLogger(__name__)
 
@@ -339,6 +341,7 @@ def insert_album(c, album, images=None):
             "num_discs": album.num_discs,
             "date": album.date,
             "musicbrainz_id": album.musicbrainz_id,
+            "path": album.path,
             "images": " ".join(images) if images else None,
         },
     )
@@ -365,6 +368,7 @@ def insert_track(c, track, images=None):
             "comment": track.comment,
             "musicbrainz_id": track.musicbrainz_id,
             "last_modified": track.last_modified,
+            "audio_ext": track.audio_ext,
         },
     )
     return track.uri
@@ -479,6 +483,7 @@ def _track(row):
         "comment": row.comment,
         "musicbrainz_id": row.musicbrainz_id,
         "last_modified": row.last_modified,
+        "audio_ext": row.audio_ext,
     }
     if row.album_uri is not None:
         if row.albumartist_uri is not None:
@@ -500,6 +505,7 @@ def _track(row):
             num_discs=row.album_num_discs,
             date=row.album_date,
             musicbrainz_id=row.album_musicbrainz_id,
+            path=row.album_path,
         )
     if row.artist_uri is not None:
         kwargs["artists"] = [

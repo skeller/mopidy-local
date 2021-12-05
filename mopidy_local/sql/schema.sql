@@ -2,7 +2,7 @@
 
 BEGIN EXCLUSIVE TRANSACTION;
 
-PRAGMA user_version = 7;                -- schema version
+PRAGMA user_version = 8;                -- schema version
 
 CREATE TABLE artist (
     uri             TEXT PRIMARY KEY,   -- artist URI
@@ -20,6 +20,7 @@ CREATE TABLE album (
     date            TEXT,               -- album release date (YYYY or YYYY-MM-DD)
     musicbrainz_id  TEXT,               -- MusicBrainz ID
     images          TEXT,               -- (list of strings) album image URIs
+    path            TEXT,               -- path
     FOREIGN KEY (artists) REFERENCES artist (uri)
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE track (
     comment         TEXT,               -- track comment
     musicbrainz_id  TEXT,               -- MusicBrainz ID
     last_modified   INTEGER,            -- Represents last modification time
+    audio_ext       TEXT,               -- audio extention / codec
     FOREIGN KEY (album) REFERENCES album (uri),
     FOREIGN KEY (artists) REFERENCES artist (uri),
     FOREIGN KEY (composers) REFERENCES artist (uri),
@@ -77,7 +79,8 @@ SELECT album.uri                        AS uri,
        album.num_discs                  AS num_discs,
        album.date                       AS date,
        album.musicbrainz_id             AS musicbrainz_id,
-       album.images                     AS images
+       album.images                     AS images,
+       album.path                       AS path
   FROM album
   LEFT OUTER JOIN artist                ON album.artists = artist.uri;
 
@@ -94,6 +97,7 @@ SELECT track.rowid                      AS docid,
        track.comment                    AS comment,
        track.musicbrainz_id             AS musicbrainz_id,
        track.last_modified              AS last_modified,
+       track.audio_ext                  AS audio_ext,
        album.uri                        AS album_uri,
        album.name                       AS album_name,
        album.num_tracks                 AS album_num_tracks,
@@ -101,6 +105,7 @@ SELECT track.rowid                      AS docid,
        album.date                       AS album_date,
        album.musicbrainz_id             AS album_musicbrainz_id,
        album.images                     AS album_images,
+       album.path                       AS album_path,
        artist.uri                       AS artist_uri,
        artist.name                      AS artist_name,
        artist.sortname                  AS artist_sortname,

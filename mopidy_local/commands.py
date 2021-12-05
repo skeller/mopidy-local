@@ -236,8 +236,8 @@ class ScanCommand(commands.Command):
                         absolute_path, media_dir
                     )
                     mtime = file_mtimes.get(absolute_path)
-                    track = tags.convert_tags_to_track(result.tags).replace(
-                        uri=local_uri, length=result.duration, last_modified=mtime
+                    track = tags.convert_tags_to_track(result.tags, album_path=str(absolute_path.parent)).replace(
+                        uri=local_uri, length=result.duration, last_modified=mtime, audio_ext=str(absolute_path.suffix)
                     )
                     library.add(track, result.tags, result.duration)
                     logger.debug(f"Added {track.uri}")
