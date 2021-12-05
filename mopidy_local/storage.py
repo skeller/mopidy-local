@@ -34,6 +34,11 @@ def model_uri(type, model):
     if type == "album":
         # ignore num_tracks for multi-disc albums
         digest = hashlib.md5(str(model.replace(num_tracks=None)).encode())
+    elif type == "artist":
+        # ignore music brainz id for artists. may lead to different ones being
+        # merged, but better than having them separated, just because some
+        # files are missing the music brainz id tag, I guess
+        digest = hashlib.md5(str(model.replace(musicbrainz_id=None)).encode())
     else:
         digest = hashlib.md5(str(model).encode())
     return "local:{}:md5:{}".format(type, digest.hexdigest())
